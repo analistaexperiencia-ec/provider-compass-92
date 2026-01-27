@@ -649,6 +649,9 @@ function initUploadModal() {
     confirmBtn.disabled = true;
   });
   
+  // Descargar plantilla
+  document.getElementById('btn-download-template').addEventListener('click', downloadTemplate);
+  
   // Confirmar carga
   confirmBtn.addEventListener('click', async () => {
     if (!selectedFile) return;
@@ -702,6 +705,35 @@ function resetUploadModal() {
   document.getElementById('file-input').value = '';
   document.getElementById('file-info').classList.add('hidden');
   document.getElementById('btn-confirm-upload').disabled = true;
+}
+
+function downloadTemplate() {
+  const headers = [
+    'nombre_proveedor',
+    'nombre_contacto', 
+    'numero_celular',
+    'ciudad',
+    'provincia',
+    'url_maps_ubicacion',
+    'Categoria_Linea'
+  ];
+  
+  const exampleRow = [
+    'Proveedor Ejemplo',
+    'Juan Pérez',
+    '+54 11 1234-5678',
+    'Buenos Aires',
+    'Buenos Aires',
+    'https://www.google.com/maps/place/-34.6037,-58.3816',
+    'Vial'
+  ];
+  
+  const ws = XLSX.utils.aoa_to_sheet([headers, exampleRow]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Proveedores');
+  
+  XLSX.writeFile(wb, 'plantilla_proveedores.xlsx');
+  showToast('Plantilla descargada', 'success');
 }
 
 // ========================================
@@ -807,6 +839,8 @@ function openEditModal(id) {
   document.getElementById('edit-ciudad').value = provider.ciudad;
   document.getElementById('edit-provincia').value = provider.provincia;
   document.getElementById('edit-categoria').value = provider.categoria;
+  document.getElementById('edit-lat').value = provider.lat;
+  document.getElementById('edit-lng').value = provider.lng;
   
   openModal('edit-modal');
 }
@@ -817,6 +851,14 @@ function initEditModal() {
     const index = AppState.providers.findIndex(p => p.id === id);
     
     if (index !== -1) {
+      const lat = parseFloat(document.getElementById('edit-lat').value);
+      const lng = parseFloat(document.getElementById('edit-lng').value);
+      
+      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        showToast('Coordenadas inválidas. Latitud: -90 a 90, Longitud: -180 a 180', 'error');
+        return;
+      }
+      
       AppState.providers[index] = {
         ...AppState.providers[index],
         nombre_proveedor: document.getElementById('edit-nombre').value,
@@ -824,7 +866,9 @@ function initEditModal() {
         numero_celular: document.getElementById('edit-celular').value,
         ciudad: document.getElementById('edit-ciudad').value,
         provincia: document.getElementById('edit-provincia').value,
-        categoria: document.getElementById('edit-categoria').value
+        categoria: document.getElementById('edit-categoria').value,
+        lat: lat,
+        lng: lng
       };
       
       updateCategoryFilter();
