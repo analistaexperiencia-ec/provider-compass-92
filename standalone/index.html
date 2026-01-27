@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Proveedores - Mapa Interactivo</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Top Bar -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <h1 class="logo">🗺️ Gestión de Proveedores</h1>
+    </div>
+    <div class="top-bar-right">
+      <button id="btn-upload" class="btn btn-primary">
+        <span class="icon">📤</span> Cargar Excel
+      </button>
+      <button id="btn-table" class="btn btn-secondary">
+        <span class="icon">📋</span> Ver Tabla
+      </button>
+    </div>
+  </header>
+
+  <!-- Side Panel -->
+  <aside id="side-panel" class="side-panel">
+    <button id="toggle-panel" class="toggle-panel-btn">‹</button>
+    
+    <!-- Search Section -->
+    <div class="search-section">
+      <label class="input-label">
+        <span class="icon">📍</span> Ubicación del cliente
+      </label>
+      <div class="search-row">
+        <input type="text" id="location-input" class="input" placeholder="Link de Google Maps, dirección o coordenadas...">
+        <button id="btn-search" class="btn btn-icon">🔍</button>
+      </div>
+      <p id="location-info" class="location-info"></p>
+      
+      <!-- Filters -->
+      <div class="filters-row">
+        <select id="filter-category" class="select">
+          <option value="">Todas las categorías</option>
+        </select>
+        <select id="filter-radius" class="select select-small">
+          <option value="5">5 km</option>
+          <option value="10">10 km</option>
+          <option value="20" selected>20 km</option>
+          <option value="50">50 km</option>
+          <option value="100">100 km</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Providers List -->
+    <div class="providers-section">
+      <div class="providers-header">
+        <h3>Proveedores</h3>
+        <span id="providers-count" class="badge">0</span>
+      </div>
+      <div id="providers-list" class="providers-list"></div>
+    </div>
+  </aside>
+
+  <!-- Map Container -->
+  <main id="map-container" class="map-container">
+    <div id="map"></div>
+  </main>
+
+  <!-- Excel Upload Modal -->
+  <div id="upload-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>📤 Cargar Proveedores desde Excel</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="drop-zone" class="drop-zone">
+          <div class="drop-zone-content">
+            <span class="drop-icon">📁</span>
+            <p>Arrastra tu archivo Excel aquí</p>
+            <p class="text-muted">o haz clic para seleccionar</p>
+            <input type="file" id="file-input" accept=".xlsx,.xls" hidden>
+          </div>
+        </div>
+        <div id="file-info" class="file-info hidden">
+          <span class="file-name"></span>
+          <button class="btn-remove-file">&times;</button>
+        </div>
+        <div class="required-columns">
+          <h4>Columnas requeridas:</h4>
+          <ul>
+            <li><strong>nombre_proveedor</strong> (obligatorio)</li>
+            <li><strong>ciudad</strong> (obligatorio)</li>
+            <li><strong>provincia</strong> (obligatorio)</li>
+            <li><strong>url_maps_ubicacion</strong> (obligatorio)</li>
+            <li>nombre_contacto</li>
+            <li>numero_celular</li>
+            <li>Categoria_Linea</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-upload" class="btn btn-secondary">Cancelar</button>
+        <button id="btn-confirm-upload" class="btn btn-primary" disabled>Cargar Datos</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Providers Table Modal -->
+  <div id="table-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2>📋 Gestión de Proveedores</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Table Filters -->
+        <div class="table-filters">
+          <input type="text" id="table-search" class="input" placeholder="Buscar por nombre...">
+          <select id="table-filter-province" class="select">
+            <option value="">Todas las provincias</option>
+          </select>
+          <select id="table-filter-city" class="select">
+            <option value="">Todas las ciudades</option>
+          </select>
+          <select id="table-filter-category" class="select">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+        
+        <!-- Table -->
+        <div class="table-container">
+          <table id="providers-table">
+            <thead>
+              <tr>
+                <th>Proveedor</th>
+                <th>Contacto</th>
+                <th>Celular</th>
+                <th>Ciudad</th>
+                <th>Provincia</th>
+                <th>Categoría</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Provider Modal -->
+  <div id="edit-modal" class="modal hidden">
+    <div class="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>✏️ Editar Proveedor</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-form">
+          <input type="hidden" id="edit-id">
+          <div class="form-group">
+            <label>Nombre del Proveedor</label>
+            <input type="text" id="edit-nombre" class="input" required>
+          </div>
+          <div class="form-group">
+            <label>Nombre de Contacto</label>
+            <input type="text" id="edit-contacto" class="input">
+          </div>
+          <div class="form-group">
+            <label>Número de Celular</label>
+            <input type="text" id="edit-celular" class="input">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ciudad</label>
+              <input type="text" id="edit-ciudad" class="input" required>
+            </div>
+            <div class="form-group">
+              <label>Provincia</label>
+              <input type="text" id="edit-provincia" class="input" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <input type="text" id="edit-categoria" class="input">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-cancel-edit" class="btn btn-secondary">Cancelar</button>
+        <button id="btn-save-edit" class="btn btn-primary">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- SheetJS for Excel parsing -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+  
+  <!-- App JS -->
+  <script src="app.js"></script>
+</body>
+</html>
