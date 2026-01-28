@@ -124,7 +124,7 @@
     <div class="modal-overlay"></div>
     <div class="modal-content modal-large">
       <div class="modal-header">
-        <h2>📋 Gestión de Proveedores</h2>
+        <h2>📋 Lista de Proveedores</h2>
         <button class="modal-close">&times;</button>
       </div>
       <div class="modal-body">
@@ -153,68 +153,12 @@
                 <th>Ciudad</th>
                 <th>Provincia</th>
                 <th>Categoría</th>
-                <th>Acciones</th>
+                <th>Ubicación</th>
               </tr>
             </thead>
             <tbody id="table-body"></tbody>
           </table>
         </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Edit Provider Modal -->
-  <div id="edit-modal" class="modal hidden">
-    <div class="modal-overlay"></div>
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>✏️ Editar Proveedor</h2>
-        <button class="modal-close">&times;</button>
-      </div>
-      <div class="modal-body">
-        <form id="edit-form">
-          <input type="hidden" id="edit-id">
-          <div class="form-group">
-            <label>Nombre del Proveedor</label>
-            <input type="text" id="edit-nombre" class="input" required>
-          </div>
-          <div class="form-group">
-            <label>Nombre de Contacto</label>
-            <input type="text" id="edit-contacto" class="input">
-          </div>
-          <div class="form-group">
-            <label>Número de Celular</label>
-            <input type="text" id="edit-celular" class="input">
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Ciudad</label>
-              <input type="text" id="edit-ciudad" class="input" required>
-            </div>
-            <div class="form-group">
-              <label>Provincia</label>
-              <input type="text" id="edit-provincia" class="input" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Categoría</label>
-            <input type="text" id="edit-categoria" class="input">
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Latitud</label>
-              <input type="number" id="edit-lat" class="input" step="any" required>
-            </div>
-            <div class="form-group">
-              <label>Longitud</label>
-              <input type="number" id="edit-lng" class="input" step="any" required>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button id="btn-cancel-edit" class="btn btn-secondary">Cancelar</button>
-        <button id="btn-save-edit" class="btn btn-primary">Guardar Cambios</button>
       </div>
     </div>
   </div>
