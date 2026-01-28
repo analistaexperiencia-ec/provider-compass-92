@@ -600,9 +600,8 @@ function initModals() {
     });
   });
   
-  // Botones de cancelar
+  // Botón de cancelar
   document.getElementById('btn-cancel-upload').addEventListener('click', () => closeModal('upload-modal'));
-  document.getElementById('btn-cancel-edit').addEventListener('click', () => closeModal('edit-modal'));
 }
 
 // ========================================
@@ -807,93 +806,12 @@ function updateTable() {
       <td>${provider.provincia}</td>
       <td>${provider.categoria}</td>
       <td>
-        <div class="action-buttons">
-          <button class="btn btn-secondary btn-sm btn-edit" data-id="${provider.id}">✏️</button>
-          <button class="btn btn-danger btn-sm btn-delete" data-id="${provider.id}">🗑️</button>
-        </div>
+        <span class="coords-display">${provider.lat.toFixed(4)}, ${provider.lng.toFixed(4)}</span>
       </td>
     </tr>
   `).join('');
-  
-  // Event listeners para acciones
-  tbody.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', () => openEditModal(btn.dataset.id));
-  });
-  
-  tbody.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', () => deleteProvider(btn.dataset.id));
-  });
 }
 
-// ========================================
-// Edit Modal
-// ========================================
-function openEditModal(id) {
-  const provider = AppState.providers.find(p => p.id === id);
-  if (!provider) return;
-  
-  document.getElementById('edit-id').value = provider.id;
-  document.getElementById('edit-nombre').value = provider.nombre_proveedor;
-  document.getElementById('edit-contacto').value = provider.nombre_contacto;
-  document.getElementById('edit-celular').value = provider.numero_celular;
-  document.getElementById('edit-ciudad').value = provider.ciudad;
-  document.getElementById('edit-provincia').value = provider.provincia;
-  document.getElementById('edit-categoria').value = provider.categoria;
-  document.getElementById('edit-lat').value = provider.lat;
-  document.getElementById('edit-lng').value = provider.lng;
-  
-  openModal('edit-modal');
-}
-
-function initEditModal() {
-  document.getElementById('btn-save-edit').addEventListener('click', () => {
-    const id = document.getElementById('edit-id').value;
-    const index = AppState.providers.findIndex(p => p.id === id);
-    
-    if (index !== -1) {
-      const lat = parseFloat(document.getElementById('edit-lat').value);
-      const lng = parseFloat(document.getElementById('edit-lng').value);
-      
-      if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-        showToast('Coordenadas inválidas. Latitud: -90 a 90, Longitud: -180 a 180', 'error');
-        return;
-      }
-      
-      AppState.providers[index] = {
-        ...AppState.providers[index],
-        nombre_proveedor: document.getElementById('edit-nombre').value,
-        nombre_contacto: document.getElementById('edit-contacto').value,
-        numero_celular: document.getElementById('edit-celular').value,
-        ciudad: document.getElementById('edit-ciudad').value,
-        provincia: document.getElementById('edit-provincia').value,
-        categoria: document.getElementById('edit-categoria').value,
-        lat: lat,
-        lng: lng
-      };
-      
-      updateCategoryFilter();
-      filterProviders();
-      updateTable();
-      closeModal('edit-modal');
-      showToast('Proveedor actualizado', 'success');
-    }
-  });
-}
-
-function deleteProvider(id) {
-  if (!confirm('¿Estás seguro de eliminar este proveedor?')) return;
-  
-  AppState.providers = AppState.providers.filter(p => p.id !== id);
-  
-  if (AppState.selectedProvider?.id === id) {
-    AppState.selectedProvider = null;
-  }
-  
-  updateCategoryFilter();
-  filterProviders();
-  updateTable();
-  showToast('Proveedor eliminado', 'success');
-}
 
 // ========================================
 // Event Listeners Principales
@@ -988,7 +906,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initModals();
   initUploadModal();
   initTableModal();
-  initEditModal();
   initEventListeners();
   
   // Actualizar UI
