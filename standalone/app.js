@@ -17,98 +17,44 @@ const AppState = {
 };
 
 // ========================================
-// Datos de Ejemplo
+// LocalStorage - Persistencia de Datos
 // ========================================
-const sampleProviders = [
-  {
-    id: '1',
-    nombre_proveedor: 'Grúas Rápidas SA',
-    nombre_contacto: 'Carlos Mendoza',
-    numero_celular: '+54 11 4567-8901',
-    ciudad: 'Buenos Aires',
-    provincia: 'Buenos Aires',
-    categoria: 'Vial',
-    lat: -34.6037,
-    lng: -58.3816
-  },
-  {
-    id: '2',
-    nombre_proveedor: 'Asistencia Médica 24hs',
-    nombre_contacto: 'María González',
-    numero_celular: '+54 11 5678-9012',
-    ciudad: 'La Plata',
-    provincia: 'Buenos Aires',
-    categoria: 'Médica',
-    lat: -34.9214,
-    lng: -57.9544
-  },
-  {
-    id: '3',
-    nombre_proveedor: 'Dental Express',
-    nombre_contacto: 'Juan Pérez',
-    numero_celular: '+54 351 456-7890',
-    ciudad: 'Córdoba',
-    provincia: 'Córdoba',
-    categoria: 'Dental',
-    lat: -31.4201,
-    lng: -64.1888
-  },
-  {
-    id: '4',
-    nombre_proveedor: 'Auxilio Mecánico Norte',
-    nombre_contacto: 'Roberto Sánchez',
-    numero_celular: '+54 381 567-8901',
-    ciudad: 'San Miguel de Tucumán',
-    provincia: 'Tucumán',
-    categoria: 'Vial',
-    lat: -26.8241,
-    lng: -65.2226
-  },
-  {
-    id: '5',
-    nombre_proveedor: 'Centro Médico Rosario',
-    nombre_contacto: 'Ana Martínez',
-    numero_celular: '+54 341 678-9012',
-    ciudad: 'Rosario',
-    provincia: 'Santa Fe',
-    categoria: 'Médica',
-    lat: -32.9442,
-    lng: -60.6505
-  },
-  {
-    id: '6',
-    nombre_proveedor: 'Grúas del Sur',
-    nombre_contacto: 'Pedro López',
-    numero_celular: '+54 291 789-0123',
-    ciudad: 'Bahía Blanca',
-    provincia: 'Buenos Aires',
-    categoria: 'Vial',
-    lat: -38.7196,
-    lng: -62.2724
-  },
-  {
-    id: '7',
-    nombre_proveedor: 'Odontología Integral',
-    nombre_contacto: 'Laura Fernández',
-    numero_celular: '+54 261 890-1234',
-    ciudad: 'Mendoza',
-    provincia: 'Mendoza',
-    categoria: 'Dental',
-    lat: -32.8895,
-    lng: -68.8458
-  },
-  {
-    id: '8',
-    nombre_proveedor: 'Emergencias Médicas Cuyo',
-    nombre_contacto: 'Diego Ruiz',
-    numero_celular: '+54 264 901-2345',
-    ciudad: 'San Juan',
-    provincia: 'San Juan',
-    categoria: 'Médica',
-    lat: -31.5375,
-    lng: -68.5364
+const STORAGE_KEY = 'proveedores_data';
+
+function saveToLocalStorage() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(AppState.providers));
+    console.log(`💾 ${AppState.providers.length} proveedores guardados en localStorage`);
+  } catch (error) {
+    console.error('Error al guardar en localStorage:', error);
   }
-];
+}
+
+function loadFromLocalStorage() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      const providers = JSON.parse(data);
+      if (Array.isArray(providers) && providers.length > 0) {
+        AppState.providers = providers;
+        console.log(`📂 ${providers.length} proveedores cargados desde localStorage`);
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error('Error al cargar desde localStorage:', error);
+  }
+  return false;
+}
+
+function clearLocalStorage() {
+  localStorage.removeItem(STORAGE_KEY);
+  AppState.providers = [];
+  updateCategoryFilter();
+  filterProviders();
+  showEmptyState();
+  showToast('Datos eliminados', 'info');
+}
 
 // ========================================
 // Utilidades
@@ -668,9 +614,11 @@ function initUploadModal() {
       
       if (result.providers.length > 0) {
         AppState.providers = result.providers;
+        // Guardar en localStorage para persistencia
+        saveToLocalStorage();
         updateCategoryFilter();
         filterProviders();
-        showToast(`${result.providers.length} proveedores cargados exitosamente`, 'success');
+        showToast(`${result.providers.length} proveedores cargados y guardados`, 'success');
       } else {
         showToast('No se pudieron cargar proveedores válidos', 'error');
       }
@@ -843,6 +791,13 @@ function initEventListeners() {
     openModal('table-modal');
   });
   
+  // Limpiar datos
+  document.getElementById('btn-clear-data').addEventListener('click', () => {
+    if (confirm('¿Estás seguro de que deseas eliminar todos los datos guardados?')) {
+      clearLocalStorage();
+    }
+  });
+  
   // Búsqueda de ubicación
   document.getElementById('btn-search').addEventListener('click', handleLocationSearch);
   document.getElementById('location-input').addEventListener('keypress', (e) => {
@@ -895,12 +850,31 @@ async function handleLocationSearch() {
 }
 
 // ========================================
+// Estado Vacío
+// ========================================
+function showEmptyState() {
+  const list = document.getElementById('providers-list');
+  list.innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">📁</div>
+      <h3>Sin datos cargados</h3>
+      <p>Carga tu archivo Excel con los proveedores para comenzar</p>
+      <button id="btn-load-excel" class="btn btn-primary" style="margin-top: 16px;">
+        📤 Cargar Excel
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('btn-load-excel')?.addEventListener('click', () => {
+    resetUploadModal();
+    openModal('upload-modal');
+  });
+}
+
+// ========================================
 // Inicialización
 // ========================================
 document.addEventListener('DOMContentLoaded', () => {
-  // Cargar datos de ejemplo
-  AppState.providers = sampleProviders;
-  
   // Inicializar componentes
   initMap();
   initModals();
@@ -908,9 +882,20 @@ document.addEventListener('DOMContentLoaded', () => {
   initTableModal();
   initEventListeners();
   
-  // Actualizar UI
-  updateCategoryFilter();
-  filterProviders();
+  // Intentar cargar datos desde localStorage
+  const hasData = loadFromLocalStorage();
+  
+  if (hasData) {
+    // Actualizar UI con datos existentes
+    updateCategoryFilter();
+    filterProviders();
+    showToast(`${AppState.providers.length} proveedores cargados`, 'success');
+  } else {
+    // Mostrar estado vacío
+    showEmptyState();
+    updateProvidersCount();
+  }
   
   console.log('🗺️ Aplicación de Gestión de Proveedores iniciada');
+  console.log('ℹ️ Los datos se guardan automáticamente en el navegador');
 });
